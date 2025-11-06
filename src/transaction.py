@@ -122,20 +122,28 @@ class Journal:
 
     def get_all_balances(self) -> dict[str, {str, int}]:
         """
-        Calculate all balances (sort data by account), "Ledger"
+        Calculate all balances and sorts data by category (ledger and unadjusted account trial balances in one)
         """
         if self.get_total_debits() != self.get_total_credits():
             raise ValueError(f"Debit must match credit, got {self.get_total_debits()} and {self.get_total_credits()}.")
 
-        ledger: dict = {}
+        balances: dict = {}
         for entry in self.journal_entries:
             for key in ['debit', 'credit']:
                 category = entry[f'{key}_category']
                 account = entry[f'{key}_account']
 
-                ledger.setdefault(category, {})[account] = self.get_balance_of_account(account)
+                balances.setdefault(category, {})[account] = self.get_balance_of_account(account)
 
-        return ledger
+        return balances
+
+    def get_total_unadjusted_trial_balance(self) -> int:
+        """
+        Calculates total unadjusted trial balance
+        """
+        if self.get_total_debits() != self.get_total_credits():
+            raise ValueError(f"Debit must match credit, got {self.get_total_debits()} and {self.get_total_credits()}.")
+        return self.get_total_debits()
 
     def __len__(self):
         return len(self.transactions)

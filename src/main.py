@@ -46,6 +46,7 @@ def main():
     print(f"{journal.get_balance_of_account('Owners Capital')}")
 
     print(f"{journal.get_all_balances()}")
+    print(f"{journal.get_total_unadjusted_trial_balance()}")
 
 
 if __name__ == '__main__':
