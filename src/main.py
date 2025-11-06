@@ -35,12 +35,17 @@ def main():
     txn_list: list = transactions()
 
     # Journal
-    journal = Journal(journal_name="Company XYZ", start_date="2025-10-01", end_date="2025-10-30")
+    journal = Journal(journal_name='Company XYZ', start_date='2025-10-01', end_date='2025-10-30')
 
     for txn in txn_list:
         journal.add_transaction(txn)
 
-    print(f"{journal.get_entries_by_account("Accounts payable")}")
+    print(f"{journal.get_entries_by_account('Accounts payable')}")
+
+    print(f"{journal.get_balance_of_account('Cash')}")
+    print(f"{journal.get_balance_of_account('Owners Capital')}")
+
+    print(f"{journal.get_all_balances()}")
 
 
 if __name__ == '__main__':

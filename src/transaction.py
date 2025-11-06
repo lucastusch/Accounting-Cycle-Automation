@@ -109,3 +109,33 @@ class Journal:
         """
         return sum(entry['credit_amount'] for entry in self.journal_entries)
 
+    def get_balance_of_account(self, account_name: str) -> int:
+        """
+        Calculate the balance of the specified account
+        """
+        debits_balance: int = sum(
+            entry['debit_amount'] for entry in self.journal_entries if entry['debit_account'] == account_name)
+        credits_balance: int = sum(
+            entry['credit_amount'] for entry in self.journal_entries if entry['credit_account'] == account_name)
+
+        return abs(debits_balance - credits_balance)
+
+    def get_all_balances(self) -> dict[str, {str, int}]:
+        """
+        Calculate all balances (sort data by account), "Ledger"
+        """
+        if self.get_total_debits() != self.get_total_credits():
+            raise ValueError(f"Debit must match credit, got {self.get_total_debits()} and {self.get_total_credits()}.")
+
+        ledger: dict = {}
+        for entry in self.journal_entries:
+            for key in ['debit', 'credit']:
+                category = entry[f'{key}_category']
+                account = entry[f'{key}_account']
+
+                ledger.setdefault(category, {})[account] = self.get_balance_of_account(account)
+
+        return ledger
+
+    def __len__(self):
+        return len(self.transactions)
