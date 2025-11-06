@@ -2,8 +2,7 @@ class Transaction:
     """
     Represents a single business transaction following the accounting equation (Assets = Liabilities + Equity)
     """
-
-    transaction_counter = 0
+    transaction_counter: int = 0
 
     def __init__(self, date, description):
         Transaction.transaction_counter += 1
@@ -43,6 +42,7 @@ class Journal:
     """
     Represents a Journal - records all business transactions
     """
+    adjustment_counter = 0
 
     def __init__(self, journal_name: str, start_date: str, end_date: str):
         self.journal_name: str = journal_name
@@ -51,6 +51,17 @@ class Journal:
 
         self.start_date: str = start_date
         self.end_date: str = end_date
+
+    def _check_balance(self):
+        """
+        Checks if debits match credits
+        """
+        sum_debit_entries: int = sum(entry['debit_amount'] for entry in self.journal_entries)
+        sum_credit_entries: int = sum(entry['credit_amount'] for entry in self.journal_entries)
+        if sum_debit_entries != sum_credit_entries:
+            raise ValueError(
+                f"Debit must match credit, got sum of debit entries={sum_debit_entries} and sum of credit entries={sum_credit_entries}"
+            )
 
     def add_transaction(self, transaction: Transaction):
         """
@@ -90,42 +101,31 @@ class Journal:
         """
         return [entry for entry in self.journal_entries if entry['date'] == date]
 
-    def get_entries_by_account(self, account_name: str) -> list:
+    def get_single_account_entries(self, account_name: str) -> list:
         """
         Retrieve all journal entries involving a specific account
         """
         return [entry for entry in self.journal_entries
                 if entry['debit_account'] == account_name or entry['credit_account'] == account_name]
 
-    def get_total_debits(self) -> int:
-        """
-        Calculate the total of all debit entries in the journal
-        """
-        return sum(entry['debit_amount'] for entry in self.journal_entries)
-
-    def get_total_credits(self) -> int:
-        """
-        Calculate the total of all credit entries in the journal
-        """
-        return sum(entry['credit_amount'] for entry in self.journal_entries)
-
-    def get_balance_of_account(self, account_name: str) -> int:
+    def get_single_account_balance(self, account_name: str) -> int:
         """
         Calculate the balance of the specified account
         """
+        self._check_balance()
+
         debits_balance: int = sum(
             entry['debit_amount'] for entry in self.journal_entries if entry['debit_account'] == account_name)
         credits_balance: int = sum(
             entry['credit_amount'] for entry in self.journal_entries if entry['credit_account'] == account_name)
 
-        return abs(debits_balance - credits_balance)
+        return debits_balance - credits_balance
 
-    def get_all_balances(self) -> dict[str, {str, int}]:
+    def get_account_balances(self) -> dict[str, {str, int}]:
         """
-        Calculate all balances and sorts data by category (ledger and unadjusted account trial balances in one)
+        Calculate all account balances and sorts data by category (ledger and unadjusted account trial balances in one)
         """
-        if self.get_total_debits() != self.get_total_credits():
-            raise ValueError(f"Debit must match credit, got {self.get_total_debits()} and {self.get_total_credits()}.")
+        self._check_balance()
 
         balances: dict = {}
         for entry in self.journal_entries:
@@ -133,17 +133,56 @@ class Journal:
                 category = entry[f'{key}_category']
                 account = entry[f'{key}_account']
 
-                balances.setdefault(category, {})[account] = self.get_balance_of_account(account)
+                balances.setdefault(category, {})[account] = self.get_single_account_balance(account)
 
         return balances
 
-    def get_total_unadjusted_trial_balance(self) -> int:
+    def get_category_balances(self) -> dict[str, int]:
         """
-        Calculates total unadjusted trial balance
+        Calculate the category balances
         """
-        if self.get_total_debits() != self.get_total_credits():
-            raise ValueError(f"Debit must match credit, got {self.get_total_debits()} and {self.get_total_credits()}.")
-        return self.get_total_debits()
+        self._check_balance()
+
+        balances: dict = self.get_account_balances()
+        return {category: sum(items.values()) for category, items in balances.items()}
+
+    def adjust_journal_entry(self, adjustment_date: str, description: str,
+                             debit_category: str, debit_account_name: str, debit_amount: int,
+                             credit_category: str, credit_account_name: str, credit_amount: int):
+
+        Journal.adjustment_counter += 1
+
+        if debit_amount < 0 or credit_amount < 0:
+            raise ValueError(f"Amount must be positive, got {debit_amount} and {credit_amount}.")
+
+        if debit_amount != credit_amount:
+            raise ValueError(f"Debit must match credit, got {debit_amount} and {credit_amount}.")
+
+        adjustment_txn = Transaction(date=adjustment_date, description=description)
+        adjustment_txn.add_entry(
+            debit_category=debit_category,
+            debit_account_name=debit_account_name,
+            debit_amount=debit_amount,
+            credit_category=credit_category,
+            credit_account_name=credit_account_name,
+            credit_amount=credit_amount
+        )
+
+        self.add_transaction(adjustment_txn)
+
+    def get_trial_balance(self):
+        """
+        Calculates unadjusted or (after "adjust_journal_entry") adjusted trial balance
+        """
+        self._check_balance()
+
+        category_balances: dict = self.get_category_balances()
+        return category_balances["asset"]
 
     def __len__(self):
-        return len(self.transactions)
+        return len(self.transactions) - self.adjustment_counter
+
+    def __repr__(self):
+        return (f"Journal {self.journal_name} for operating range {self.start_date} to {self.end_date}.\n"
+                f"Transactions: {len(self.transactions) - self.adjustment_counter}, "
+                f"adjustments: {self.adjustment_counter}")
