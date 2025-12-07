@@ -23,9 +23,8 @@ class Transaction:
         if debit_amount != credit_amount:
             raise ValueError(f"Debit must match credit, got {debit_amount} and {credit_amount}.")
 
-        if debit_category not in ["asset", "liability", "equity"] or credit_category not in ["asset", "liability",
-                                                                                             "equity"]:
-            raise ValueError(f"Category must be eiter 'asset', 'liability', or 'equity'.")
+        if debit_category not in ["Asset", "Liability", "Equity"] or credit_category not in ["Asset", "Liability", "Equity"]:
+            raise ValueError(f"Category must be eiter 'Asset', 'Liability', or 'Equity'.")
 
         self.entry = {
             'id': self.transaction_id,
@@ -177,7 +176,7 @@ class Journal:
         self._check_balance()
 
         category_balances: dict = self.get_category_balances()
-        return category_balances["asset"]
+        return category_balances["Asset"]
 
     def __len__(self):
         return len(self.transactions) - self.adjustment_counter

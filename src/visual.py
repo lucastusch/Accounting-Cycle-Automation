@@ -85,11 +85,11 @@ class Visualization:
         worksheet.column_dimensions['A'].width = 30
         worksheet.column_dimensions['B'].width = 15
 
-        totals = {'asset': 0, 'liability': 0, 'equity': 0}
+        totals = {'Asset': 0, 'Liability': 0, 'Equity': 0}
 
         # Assets
-        if 'asset' in account_balances:
-            accounts = account_balances['asset']
+        if 'Asset' in account_balances:
+            accounts = account_balances['Asset']
 
             header_cell1 = worksheet.cell(row=row, column=1)
             header_cell1.value = "Assets:"
@@ -120,7 +120,7 @@ class Visualization:
                 category_total += balance
                 row += 1
 
-            totals['asset'] = category_total
+            totals['Asset'] = category_total
 
             total_cell1 = worksheet.cell(row=row, column=1)
             total_cell1.value = "Total assets:"
@@ -150,8 +150,8 @@ class Visualization:
         header_cell2.fill = section_header_fill
         row += 1
 
-        if 'liability' in account_balances:
-            accounts = account_balances['liability']
+        if 'Liability' in account_balances:
+            accounts = account_balances['Liability']
 
             liability_total = 0
 
@@ -173,7 +173,7 @@ class Visualization:
                 liability_total += balance
                 row += 1
 
-            totals['liability'] = liability_total
+            totals['Liability'] = liability_total
 
             total_cell1 = worksheet.cell(row=row, column=1)
             total_cell1.value = "Total liabilities:"
@@ -194,8 +194,8 @@ class Visualization:
             total_cell2.fill = total_fill
             row += 1
 
-        if 'equity' in account_balances:
-            accounts = account_balances['equity']
+        if 'Equity' in account_balances:
+            accounts = account_balances['Equity']
 
             equity_total = 0
 
@@ -217,7 +217,7 @@ class Visualization:
                 equity_total += balance
                 row += 1
 
-            totals['equity'] = equity_total
+            totals['Equity'] = equity_total
 
             total_cell1 = worksheet.cell(row=row, column=1)
             total_cell1.value = "Total equity:"
@@ -238,7 +238,7 @@ class Visualization:
             row += 2
 
         # Total liabilities and equity
-        total_liability_equity = totals['liability'] + totals['equity']
+        total_liability_equity = totals['Liability'] + totals['Equity']
 
         total_cell1 = worksheet.cell(row=row, column=1)
         total_cell1.value = "Total liabilities and equity:"
@@ -259,7 +259,7 @@ class Visualization:
 
     def export_to_excel(self, filename: str):
         """
-        Export transactions to first worksheet and trial balance to second worksheet in Excel file.
+        Export transactions to first worksheet and trial balance to second worksheet in Excel file
         """
         transactions = self._transactions_to_dataframe()
 
@@ -279,7 +279,8 @@ class Visualization:
                 cell.font = header_font
                 cell.fill = header_fill
 
-            for row in worksheet1.iter_rows(min_row=2, max_row=worksheet1.max_row, min_col=1, max_col=len(transactions.columns)):
+            for row in worksheet1.iter_rows(min_row=2, max_row=worksheet1.max_row, min_col=1,
+                                            max_col=len(transactions.columns)):
                 for cell in row:
                     cell.fill = white_fill
 
